@@ -1,9 +1,18 @@
-import { Button } from "@/components/ui/button";
-import { GraduationCap, Menu, X, Award, BarChart3, Users, Upload } from "lucide-react";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { GraduationCap, Menu, X, User, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -35,8 +44,22 @@ export const Navigation = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-3">
-            <Button variant="ghost">Sign In</Button>
-            <Button variant="hero">Get Started</Button>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-muted-foreground">
+                  <User className="w-4 h-4 inline mr-1" />
+                  {user.email}
+                </span>
+                <Button variant="outline" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <Link to="/auth">
+                <Button variant="hero">Sign In</Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -67,8 +90,22 @@ export const Navigation = () => {
                 Analytics
               </a>
               <div className="flex flex-col space-y-2 pt-4">
-                <Button variant="ghost" className="justify-start">Sign In</Button>
-                <Button variant="hero" className="justify-start">Get Started</Button>
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground px-2">
+                      <User className="w-4 h-4 inline mr-1" />
+                      {user.email}
+                    </div>
+                    <Button variant="outline" className="justify-start w-full" onClick={handleSignOut}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Link to="/auth">
+                    <Button variant="hero" className="justify-start w-full">Sign In</Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
