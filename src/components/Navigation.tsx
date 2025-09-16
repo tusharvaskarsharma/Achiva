@@ -23,7 +23,7 @@ export const Navigation = () => {
             <div className="hero-gradient p-2 rounded-lg">
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-foreground">AcademicTracker</span>
+            <span className="text-xl font-bold text-foreground">Achiva</span>
           </div>
 
           {/* Desktop Navigation */}
