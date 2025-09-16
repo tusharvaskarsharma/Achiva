@@ -50,14 +50,14 @@ export const Navigation = () => {
                   <User className="w-4 h-4 inline mr-1" />
                   {user.email}
                 </span>
-                <Button variant="outline" onClick={handleSignOut}>
+                <Button variant="outline" onClick={handleSignOut} className="transition-all duration-200 hover:scale-105">
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </Button>
               </div>
             ) : (
               <Link to="/auth">
-                <Button variant="hero">Sign In</Button>
+                <Button variant="hero" className="transition-all duration-200 hover:scale-105">Sign In</Button>
               </Link>
             )}
           </div>
@@ -66,7 +66,7 @@ export const Navigation = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden transition-all duration-200 hover:scale-105"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -96,14 +96,14 @@ export const Navigation = () => {
                       <User className="w-4 h-4 inline mr-1" />
                       {user.email}
                     </div>
-                    <Button variant="outline" className="justify-start w-full" onClick={handleSignOut}>
+                    <Button variant="outline" className="justify-start w-full transition-all duration-200 hover:scale-105" onClick={handleSignOut}>
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
                     </Button>
                   </div>
                 ) : (
                   <Link to="/auth">
-                    <Button variant="hero" className="justify-start w-full">Sign In</Button>
+                    <Button variant="hero" className="justify-start w-full transition-all duration-200 hover:scale-105">Sign In</Button>
                   </Link>
                 )}
               </div>
