@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { AddProjectDialog } from "@/components/AddProjectDialog";
+import { StudyTimer } from "@/components/StudyTimer";
 
 interface Portfolio {
   id: string;
@@ -199,6 +200,11 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Study Timer for Students */}
+          {userRole !== 'admin' && (
+            <StudyTimer onHoursUpdated={fetchUserData} />
+          )}
 
           {/* Quick Stats Cards */}
           <div className="grid md:grid-cols-4 gap-6">
