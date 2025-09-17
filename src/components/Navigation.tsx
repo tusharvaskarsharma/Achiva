@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -46,6 +46,18 @@ export const Navigation = () => {
           <div className="hidden md:flex items-center space-x-3">
             {user ? (
               <div className="flex items-center space-x-4">
+                {userRole === "admin" && (
+                  <Link to="/admin">
+                    <Button variant="secondary" className="transition-all duration-200 hover:scale-105">
+                      Admin Panel
+                    </Button>
+                  </Link>
+                )}
+                <Link to="/dashboard">
+                  <Button variant="outline" className="transition-all duration-200 hover:scale-105">
+                    Dashboard
+                  </Button>
+                </Link>
                 <span className="text-sm text-muted-foreground">
                   <User className="w-4 h-4 inline mr-1" />
                   {user.email}
@@ -92,6 +104,18 @@ export const Navigation = () => {
               <div className="flex flex-col space-y-2 pt-4">
                 {user ? (
                   <div className="space-y-2">
+                    {userRole === "admin" && (
+                      <Link to="/admin">
+                        <Button variant="secondary" className="justify-start w-full transition-all duration-200 hover:scale-105">
+                          Admin Panel
+                        </Button>
+                      </Link>
+                    )}
+                    <Link to="/dashboard">
+                      <Button variant="outline" className="justify-start w-full transition-all duration-200 hover:scale-105">
+                        Dashboard
+                      </Button>
+                    </Link>
                     <div className="text-sm text-muted-foreground px-2">
                       <User className="w-4 h-4 inline mr-1" />
                       {user.email}

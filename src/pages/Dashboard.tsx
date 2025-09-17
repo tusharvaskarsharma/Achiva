@@ -3,9 +3,10 @@ import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Calendar, Shield, ExternalLink, Plus, TrendingUp, BarChart3, Target } from "lucide-react";
+import { User, Mail, Calendar, Shield, ExternalLink, Plus, TrendingUp, BarChart3, Target, Users, GraduationCap } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 interface Portfolio {
   id: string;
@@ -24,7 +25,7 @@ interface Analytics {
 }
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [analytics, setAnalytics] = useState<Analytics[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,8 +97,18 @@ const Dashboard = () => {
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold text-foreground">Welcome to Your Dashboard</h1>
             <p className="text-muted-foreground text-lg">
-              Manage your academic journey with Achiva
+              {userRole === 'admin' ? 'Manage the academic platform with Achiva' : 'Manage your academic journey with Achiva'}
             </p>
+            {userRole === 'admin' && (
+              <div className="flex justify-center gap-4">
+                <Link to="/admin">
+                  <Button variant="default" className="transition-all duration-200 hover:scale-105">
+                    <Users className="w-4 h-4 mr-2" />
+                    Admin Panel
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* User Profile Card */}
@@ -151,10 +162,12 @@ const Dashboard = () => {
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-muted-foreground" />
+                    {userRole === 'admin' ? <GraduationCap className="h-5 w-5 text-muted-foreground" /> : <User className="h-5 w-5 text-muted-foreground" />}
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">User ID</p>
-                      <p className="text-foreground font-mono text-sm">{user.id}</p>
+                      <p className="text-sm font-medium text-muted-foreground">Role</p>
+                      <Badge variant={userRole === 'admin' ? 'default' : 'secondary'} className="mt-1">
+                        {userRole === 'admin' ? 'Admin (Faculty)' : 'Student'}
+                      </Badge>
                     </div>
                   </div>
                 </div>
