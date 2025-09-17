@@ -1,29 +1,120 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, GraduationCap, BarChart3, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, GraduationCap, BarChart3, Settings, FolderOpen, TrendingUp, Calendar, Award } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 const AdminPanel = () => {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    totalAdmins: 0,
+    totalProjects: 0,
+    totalAnalytics: 0,
+    recentProjects: 0,
+    activeProjects: 0
+  });
+  const [recentProjects, setRecentProjects] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
+  const fetchAdminData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch user role counts
+      const { data: studentCount } = await supabase
+        .from('user_roles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'student');
+
+      const { data: adminCount } = await supabase
+        .from('user_roles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'admin');
+
+      // Fetch portfolio counts
+      const { data: portfolioCount } = await supabase
+        .from('portfolios')
+        .select('id', { count: 'exact', head: true });
+
+      const { data: activeProjectsCount } = await supabase
+        .from('portfolios')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'in_progress');
+
+      // Fetch recent projects (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { data: recentProjectsCount } = await supabase
+        .from('portfolios')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', sevenDaysAgo.toISOString());
+
+      // Fetch analytics count
+      const { data: analyticsCount } = await supabase
+        .from('analytics')
+        .select('id', { count: 'exact', head: true });
+
+      // Fetch recent projects details for display
+      const { data: recentProjectsData } = await supabase
+        .from('portfolios')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      setStats({
+        totalStudents: studentCount?.length || 0,
+        totalAdmins: adminCount?.length || 0,
+        totalProjects: portfolioCount?.length || 0,
+        totalAnalytics: analyticsCount?.length || 0,
+        recentProjects: recentProjectsCount?.length || 0,
+        activeProjects: activeProjectsCount?.length || 0
+      });
+
+      setRecentProjects(recentProjectsData || []);
+    } catch (error) {
+      console.error('Error fetching admin data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const adminStats = [
     {
       title: "Total Students",
-      value: "156",
+      value: loading ? "..." : stats.totalStudents.toString(),
       icon: Users,
-      description: "Active student accounts"
+      description: "Active student accounts",
+      change: "+5 this week"
     },
     {
       title: "Faculty Members", 
-      value: "12",
+      value: loading ? "..." : stats.totalAdmins.toString(),
       icon: GraduationCap,
-      description: "Admin accounts"
+      description: "Admin accounts",
+      change: "No change"
     },
     {
-      title: "Achievements Tracked",
-      value: "847",
-      icon: BarChart3,
-      description: "Total achievements in system"
+      title: "Total Projects",
+      value: loading ? "..." : stats.totalProjects.toString(),
+      icon: FolderOpen,
+      description: "Student portfolios",
+      change: `+${stats.recentProjects} this week`
+    },
+    {
+      title: "Active Projects",
+      value: loading ? "..." : stats.activeProjects.toString(),
+      icon: TrendingUp,
+      description: "In progress",
+      change: "Currently active"
     }
   ];
 
@@ -50,7 +141,7 @@ const AdminPanel = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Stats Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
           {adminStats.map((stat, index) => (
             <Card key={index} className="hover:shadow-lg transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -62,66 +153,164 @@ const AdminPanel = () => {
               <CardContent>
                 <div className="text-2xl font-bold text-foreground">{stat.value}</div>
                 <p className="text-xs text-muted-foreground">{stat.description}</p>
+                <p className="text-xs text-primary mt-1">{stat.change}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
+        {/* Recent Projects Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Recent Projects
+                </CardTitle>
+                <CardDescription>Latest student project submissions</CardDescription>
+              </div>
+              <Link to="/dashboard">
+                <Button variant="outline" size="sm">
+                  View All
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-2 text-muted-foreground">Loading recent projects...</p>
+              </div>
+            ) : recentProjects.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No recent projects found</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentProjects.map((project) => (
+                  <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <h4 className="font-medium">{project.title}</h4>
+                      <p className="text-sm text-muted-foreground line-clamp-1">{project.description}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge 
+                          variant={project.status === 'completed' ? 'default' : project.status === 'in_progress' ? 'secondary' : 'outline'}
+                          className="text-xs"
+                        >
+                          {project.status.replace('_', ' ')}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(project.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    {project.project_url && (
+                      <Button variant="ghost" size="sm" asChild>
+                        <a href={project.project_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                          <FolderOpen className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Admin Features */}
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Student Management</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Student Management
+              </CardTitle>
               <CardDescription>
                 View and manage student accounts and achievements
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-4">
                 Access comprehensive student data, review submissions, and manage achievement approvals.
               </p>
+              <div className="flex gap-2">
+                <Link to="/dashboard">
+                  <Button variant="outline" size="sm">View Dashboard</Button>
+                </Link>
+                <Badge variant="secondary">{stats.totalStudents} Students</Badge>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>System Analytics</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                System Analytics
+              </CardTitle>
               <CardDescription>
                 Monitor platform usage and performance metrics
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-4">
                 View detailed analytics about platform usage, popular achievements, and system performance.
               </p>
+              <div className="flex gap-2">
+                <Link to="/dashboard#analytics">
+                  <Button variant="outline" size="sm">View Analytics</Button>
+                </Link>
+                <Badge variant="secondary">{stats.totalAnalytics} Metrics</Badge>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Achievement Templates</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                Project Portfolio
+              </CardTitle>
               <CardDescription>
-                Create and manage achievement templates for students
+                Monitor and review student project submissions
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Design achievement categories and templates that students can use to track their progress.
+              <p className="text-muted-foreground mb-4">
+                Review student portfolios, track project progress, and provide feedback on submissions.
               </p>
+              <div className="flex gap-2">
+                <Link to="/dashboard#portfolio">
+                  <Button variant="outline" size="sm">View Projects</Button>
+                </Link>
+                <Badge variant="secondary">{stats.totalProjects} Projects</Badge>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Reports & Export</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Reports & Export
+              </CardTitle>
               <CardDescription>
                 Generate reports and export data for institutional use
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-4">
                 Create comprehensive reports and export student data for academic records and analysis.
               </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled>
+                  Coming Soon
+                </Button>
+                <Badge variant="outline">Export Tools</Badge>
+              </div>
             </CardContent>
           </Card>
         </div>
