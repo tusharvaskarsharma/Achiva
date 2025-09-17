@@ -29,39 +29,47 @@ const AdminPanel = () => {
       setLoading(true);
       
       // Fetch user role counts
-      const { data: studentCount } = await supabase
+      const { count: studentCount, error: studentError } = await supabase
         .from('user_roles')
-        .select('id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
         .eq('role', 'student');
 
-      const { data: adminCount } = await supabase
+      const { count: adminCount, error: adminError } = await supabase
         .from('user_roles')
-        .select('id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
         .eq('role', 'admin');
 
       // Fetch portfolio counts
-      const { data: portfolioCount } = await supabase
+      const { count: portfolioCount, error: portfolioError } = await supabase
         .from('portfolios')
-        .select('id', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true });
 
-      const { data: activeProjectsCount } = await supabase
+      const { count: activeProjectsCount, error: activeProjectsError } = await supabase
         .from('portfolios')
-        .select('id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
         .eq('status', 'in_progress');
 
       // Fetch recent projects (last 7 days)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
-      const { data: recentProjectsCount } = await supabase
+      const { count: recentProjectsCount, error: recentError } = await supabase
         .from('portfolios')
-        .select('id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
         .gte('created_at', sevenDaysAgo.toISOString());
 
       // Fetch analytics count
-      const { data: analyticsCount } = await supabase
+      const { count: analyticsCount, error: analyticsError } = await supabase
         .from('analytics')
-        .select('id', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true });
+
+      // Check for errors
+      if (studentError) console.error('Student count error:', studentError);
+      if (adminError) console.error('Admin count error:', adminError);
+      if (portfolioError) console.error('Portfolio count error:', portfolioError);
+      if (activeProjectsError) console.error('Active projects error:', activeProjectsError);
+      if (recentError) console.error('Recent projects error:', recentError);
+      if (analyticsError) console.error('Analytics count error:', analyticsError);
 
       // Fetch recent projects details for display
       const { data: recentProjectsData } = await supabase
@@ -71,12 +79,12 @@ const AdminPanel = () => {
         .limit(5);
 
       setStats({
-        totalStudents: studentCount?.length || 0,
-        totalAdmins: adminCount?.length || 0,
-        totalProjects: portfolioCount?.length || 0,
-        totalAnalytics: analyticsCount?.length || 0,
-        recentProjects: recentProjectsCount?.length || 0,
-        activeProjects: activeProjectsCount?.length || 0
+        totalStudents: studentCount || 0,
+        totalAdmins: adminCount || 0,
+        totalProjects: portfolioCount || 0,
+        totalAnalytics: analyticsCount || 0,
+        recentProjects: recentProjectsCount || 0,
+        activeProjects: activeProjectsCount || 0
       });
 
       setRecentProjects(recentProjectsData || []);
