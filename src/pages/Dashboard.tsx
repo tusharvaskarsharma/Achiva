@@ -3,10 +3,11 @@ import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Calendar, Shield, ExternalLink, Plus, TrendingUp, BarChart3, Target, Users, GraduationCap } from "lucide-react";
+import { User, Mail, Calendar, Shield, ExternalLink, TrendingUp, BarChart3, Target, Users, GraduationCap } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { AddProjectDialog } from "@/components/AddProjectDialog";
 
 interface Portfolio {
   id: string;
@@ -238,10 +239,7 @@ const Dashboard = () => {
                   <CardTitle className="text-2xl">Your Portfolio</CardTitle>
                   <CardDescription>Showcase your academic projects and achievements</CardDescription>
                 </div>
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Project
-                </Button>
+                <AddProjectDialog onProjectAdded={fetchUserData} />
               </div>
             </CardHeader>
             <CardContent>
