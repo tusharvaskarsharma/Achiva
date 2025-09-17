@@ -47,36 +47,48 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          is_verified: boolean
           project_url: string | null
+          review_comments: string | null
           status: string | null
           technologies: string[] | null
           title: string
           updated_at: string
           user_id: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
+          is_verified?: boolean
           project_url?: string | null
+          review_comments?: string | null
           status?: string | null
           technologies?: string[] | null
           title: string
           updated_at?: string
           user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
+          is_verified?: boolean
           project_url?: string | null
+          review_comments?: string | null
           status?: string | null
           technologies?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }

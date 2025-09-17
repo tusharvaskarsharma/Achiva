@@ -3,7 +3,7 @@ import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Calendar, Shield, ExternalLink, TrendingUp, BarChart3, Target, Users, GraduationCap } from "lucide-react";
+import { User, Mail, Calendar, Shield, ExternalLink, TrendingUp, BarChart3, Target, Users, GraduationCap, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -17,6 +17,10 @@ interface Portfolio {
   technologies: string[];
   status: 'completed' | 'in_progress' | 'planned';
   created_at: string;
+  is_verified: boolean;
+  verified_by: string | null;
+  verified_at: string | null;
+  review_comments: string | null;
 }
 
 interface Analytics {
@@ -280,14 +284,26 @@ const Dashboard = () => {
                     <Card key={portfolio.id} className="transition-all duration-200 hover:shadow-md">
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
-                          <div>
+                          <div className="flex-1">
                             <CardTitle className="text-lg">{portfolio.title}</CardTitle>
-                            <Badge 
-                              variant={portfolio.status === 'completed' ? 'default' : portfolio.status === 'in_progress' ? 'secondary' : 'outline'}
-                              className="mt-2"
-                            >
-                              {portfolio.status.replace('_', ' ')}
-                            </Badge>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge 
+                                variant={portfolio.status === 'completed' ? 'default' : portfolio.status === 'in_progress' ? 'secondary' : 'outline'}
+                              >
+                                {portfolio.status.replace('_', ' ')}
+                              </Badge>
+                              {portfolio.is_verified ? (
+                                <Badge variant="success" className="flex items-center gap-1">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Verified
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  Pending Review
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           {portfolio.project_url && (
                             <Button variant="ghost" size="sm" asChild>
@@ -300,6 +316,12 @@ const Dashboard = () => {
                       </CardHeader>
                       <CardContent>
                         <p className="text-muted-foreground text-sm mb-3">{portfolio.description}</p>
+                        {portfolio.review_comments && (
+                          <div className="mb-3 p-2 bg-muted rounded-md">
+                            <p className="text-sm font-medium text-foreground mb-1">Faculty Review:</p>
+                            <p className="text-sm text-muted-foreground">{portfolio.review_comments}</p>
+                          </div>
+                        )}
                         {portfolio.technologies && portfolio.technologies.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {portfolio.technologies.map((tech, index) => (
@@ -308,6 +330,11 @@ const Dashboard = () => {
                               </Badge>
                             ))}
                           </div>
+                        )}
+                        {portfolio.verified_at && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Verified on {new Date(portfolio.verified_at).toLocaleDateString()}
+                          </p>
                         )}
                       </CardContent>
                     </Card>

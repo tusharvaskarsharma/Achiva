@@ -2,10 +2,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, GraduationCap, BarChart3, Settings, FolderOpen, TrendingUp, Calendar, Award, LogOut } from "lucide-react";
+import { Users, GraduationCap, BarChart3, Settings, FolderOpen, TrendingUp, Calendar, Award, LogOut, CheckCircle, Clock, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
+import { ProjectReviewDialog } from "@/components/ProjectReviewDialog";
 
 const AdminPanel = () => {
   const { user, signOut } = useAuth();
@@ -20,6 +21,7 @@ const AdminPanel = () => {
     activeProjects: 0
   });
   const [recentProjects, setRecentProjects] = useState<any[]>([]);
+  const [allProjects, setAllProjects] = useState<any[]>([]);
 
   useEffect(() => {
     fetchAdminData();
@@ -79,6 +81,12 @@ const AdminPanel = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
+      // Fetch all projects for review
+      const { data: allProjectsData } = await supabase
+        .from('portfolios')
+        .select('*')
+        .order('created_at', { ascending: false });
+
       setStats({
         totalStudents: studentCount || 0,
         totalAdmins: adminCount || 0,
@@ -89,6 +97,7 @@ const AdminPanel = () => {
       });
 
       setRecentProjects(recentProjectsData || []);
+      setAllProjects(allProjectsData || []);
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
@@ -240,100 +249,201 @@ const AdminPanel = () => {
           </CardContent>
         </Card>
 
-        {/* Admin Features */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
+          {/* Admin Features */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Student Management
+                </CardTitle>
+                <CardDescription>
+                  View and manage student accounts and achievements
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Access comprehensive student data, review submissions, and manage achievement approvals.
+                </p>
+                <div className="flex gap-2">
+                  <Link to="/dashboard">
+                    <Button variant="outline" size="sm">View Dashboard</Button>
+                  </Link>
+                  <Badge variant="secondary">{stats.totalStudents} Students</Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  System Analytics
+                </CardTitle>
+                <CardDescription>
+                  Monitor platform usage and performance metrics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  View detailed analytics about platform usage, popular achievements, and system performance.
+                </p>
+                <div className="flex gap-2">
+                  <Link to="/dashboard#analytics">
+                    <Button variant="outline" size="sm">View Analytics</Button>
+                  </Link>
+                  <Badge variant="secondary">{stats.totalAnalytics} Metrics</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Project Review Section */}
+          <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Student Management
-              </CardTitle>
-              <CardDescription>
-                View and manage student accounts and achievements
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5" />
+                    Project Review & Verification
+                  </CardTitle>
+                  <CardDescription>Review and verify student project submissions</CardDescription>
+                </div>
+                <Badge variant="secondary">
+                  {allProjects.filter(p => !p.is_verified).length} Pending Review
+                </Badge>
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Access comprehensive student data, review submissions, and manage achievement approvals.
-              </p>
-              <div className="flex gap-2">
-                <Link to="/dashboard">
-                  <Button variant="outline" size="sm">View Dashboard</Button>
-                </Link>
-                <Badge variant="secondary">{stats.totalStudents} Students</Badge>
-              </div>
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-2 text-muted-foreground">Loading projects...</p>
+                </div>
+              ) : allProjects.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No projects found</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {allProjects.slice(0, 10).map((project) => (
+                    <div key={project.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="font-medium">{project.title}</h4>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={project.status === 'completed' ? 'default' : 'secondary'}>
+                              {project.status.replace('_', ' ')}
+                            </Badge>
+                            {project.is_verified ? (
+                              <Badge variant="success">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Pending Review
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-1 mb-1">{project.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <span>Submitted: {new Date(project.created_at).toLocaleDateString()}</span>
+                          {project.verified_at && (
+                            <span>Verified: {new Date(project.verified_at).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {project.project_url && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={project.project_url} target="_blank" rel="noopener noreferrer">
+                              <FolderOpen className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                        <ProjectReviewDialog project={project} onReviewComplete={fetchAdminData}>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4 mr-1" />
+                            Review
+                          </Button>
+                        </ProjectReviewDialog>
+                      </div>
+                    </div>
+                  ))}
+                  {allProjects.length > 10 && (
+                    <div className="text-center pt-4">
+                      <p className="text-sm text-muted-foreground">
+                        Showing 10 of {allProjects.length} projects
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                System Analytics
-              </CardTitle>
-              <CardDescription>
-                Monitor platform usage and performance metrics
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                View detailed analytics about platform usage, popular achievements, and system performance.
-              </p>
-              <div className="flex gap-2">
-                <Link to="/dashboard#analytics">
-                  <Button variant="outline" size="sm">View Analytics</Button>
-                </Link>
-                <Badge variant="secondary">{stats.totalAnalytics} Metrics</Badge>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Additional Admin Features */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Portfolio Statistics
+                </CardTitle>
+                <CardDescription>
+                  Overview of student project submissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Verified Projects:</span>
+                    <span className="font-medium">
+                      {allProjects.filter(p => p.is_verified).length} / {allProjects.length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Completed Projects:</span>
+                    <span className="font-medium">
+                      {allProjects.filter(p => p.status === 'completed').length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">In Progress:</span>
+                    <span className="font-medium">
+                      {allProjects.filter(p => p.status === 'in_progress').length}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5" />
-                Project Portfolio
-              </CardTitle>
-              <CardDescription>
-                Monitor and review student project submissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Review student portfolios, track project progress, and provide feedback on submissions.
-              </p>
-              <div className="flex gap-2">
-                <Link to="/dashboard#portfolio">
-                  <Button variant="outline" size="sm">View Projects</Button>
-                </Link>
-                <Badge variant="secondary">{stats.totalProjects} Projects</Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Reports & Export
-              </CardTitle>
-              <CardDescription>
-                Generate reports and export data for institutional use
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Create comprehensive reports and export student data for academic records and analysis.
-              </p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled>
-                  Coming Soon
-                </Button>
-                <Badge variant="outline">Export Tools</Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Reports & Export
+                </CardTitle>
+                <CardDescription>
+                  Generate reports and export data for institutional use
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Create comprehensive reports and export student data for academic records and analysis.
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled>
+                    Coming Soon
+                  </Button>
+                  <Badge variant="outline">Export Tools</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
       </div>
     </div>
   );
