@@ -2,13 +2,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, GraduationCap, BarChart3, Settings, FolderOpen, TrendingUp, Calendar, Award } from "lucide-react";
+import { Users, GraduationCap, BarChart3, Settings, FolderOpen, TrendingUp, Calendar, Award, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const AdminPanel = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -95,6 +96,11 @@ const AdminPanel = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
   const adminStats = [
     {
       title: "Total Students",
@@ -138,10 +144,16 @@ const AdminPanel = () => {
                 Welcome back, {user?.email}
               </p>
             </div>
-            <Badge variant="secondary" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Admin Access
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Admin Access
+              </Badge>
+              <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </div>
