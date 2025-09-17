@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Award, Upload, Users, BarChart3 } from "lucide-react";
 import heroImage from "@/assets/hero-achievement.jpg";
+import { Link } from "react-router-dom";
 
 export const HeroSection = () => {
   return (
@@ -26,9 +27,11 @@ export const HeroSection = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button variant="hero" size="lg" className="text-lg px-8 py-3">
-                Start Your Journey
-              </Button>
+              <Link to="/auth">
+                <Button variant="hero" size="lg" className="text-lg px-8 py-3">
+                  Start Your Journey
+                </Button>
+              </Link>
               <Button variant="outline" size="lg" className="text-lg px-8 py-3">
                 View Demo
               </Button>

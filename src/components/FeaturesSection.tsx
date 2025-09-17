@@ -1,5 +1,6 @@
 import { Award, Shield, FileText, BarChart3, Upload, Users, CheckCircle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export const FeaturesSection = () => {
   const features = [
@@ -119,9 +120,11 @@ export const FeaturesSection = () => {
           </div>
 
           <div className="text-center mt-12">
-            <Button variant="hero" size="lg">
-              Start Tracking Achievements
-            </Button>
+            <Link to="/auth">
+              <Button variant="hero" size="lg">
+                Start Tracking Achievements
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
