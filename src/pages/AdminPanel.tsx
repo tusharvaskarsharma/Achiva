@@ -336,7 +336,7 @@ const AdminPanel = () => {
                               {project.status.replace('_', ' ')}
                             </Badge>
                             {project.is_verified ? (
-                              <Badge variant="success">
+                              <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Verified
                               </Badge>
