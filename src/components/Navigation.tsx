@@ -19,12 +19,12 @@ export const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <div className="hero-gradient p-2 rounded-lg">
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
             <span className="text-xl font-bold text-foreground">Achiva</span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
