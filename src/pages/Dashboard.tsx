@@ -39,26 +39,46 @@ const Dashboard = () => {
 
   const fetchUserData = async () => {
     try {
-      // Fetch portfolios
-      const { data: portfolioData, error: portfolioError } = await supabase
-        .from('portfolios')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+      if (userRole === 'admin') {
+        // Fetch all portfolios for admin view
+        const { data: portfolioData, error: portfolioError } = await supabase
+          .from('portfolios')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (portfolioError) throw portfolioError;
+        if (portfolioError) throw portfolioError;
 
-      // Fetch analytics
-      const { data: analyticsData, error: analyticsError } = await supabase
-        .from('analytics')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('metric_date', { ascending: false });
+        // Fetch all analytics for admin view
+        const { data: analyticsData, error: analyticsError } = await supabase
+          .from('analytics')
+          .select('*')
+          .order('metric_date', { ascending: false });
 
-      if (analyticsError) throw analyticsError;
+        if (analyticsError) throw analyticsError;
 
-      setPortfolios((portfolioData || []) as Portfolio[]);
-      setAnalytics(analyticsData || []);
+        setPortfolios((portfolioData || []) as Portfolio[]);
+        setAnalytics(analyticsData || []);
+      } else {
+        // Fetch user's own data for student view
+        const { data: portfolioData, error: portfolioError } = await supabase
+          .from('portfolios')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false });
+
+        if (portfolioError) throw portfolioError;
+
+        const { data: analyticsData, error: analyticsError } = await supabase
+          .from('analytics')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('metric_date', { ascending: false });
+
+        if (analyticsError) throw analyticsError;
+
+        setPortfolios((portfolioData || []) as Portfolio[]);
+        setAnalytics(analyticsData || []);
+      }
     } catch (error) {
       console.error('Error fetching user data:', error);
     } finally {
@@ -236,10 +256,17 @@ const Dashboard = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl">Your Portfolio</CardTitle>
-                  <CardDescription>Showcase your academic projects and achievements</CardDescription>
+                  <CardTitle className="text-2xl">
+                    {userRole === 'admin' ? 'All Student Portfolios' : 'Your Portfolio'}
+                  </CardTitle>
+                  <CardDescription>
+                    {userRole === 'admin' 
+                      ? 'View and manage all student projects and achievements' 
+                      : 'Showcase your academic projects and achievements'
+                    }
+                  </CardDescription>
                 </div>
-                <AddProjectDialog onProjectAdded={fetchUserData} />
+                {userRole !== 'admin' && <AddProjectDialog onProjectAdded={fetchUserData} />}
               </div>
             </CardHeader>
             <CardContent>
@@ -293,8 +320,15 @@ const Dashboard = () => {
           {/* Analytics Section */}
           <Card className="transition-all duration-200 hover:shadow-lg">
             <CardHeader>
-              <CardTitle className="text-2xl">Your Analytics</CardTitle>
-              <CardDescription>Track your academic progress and performance</CardDescription>
+              <CardTitle className="text-2xl">
+                {userRole === 'admin' ? 'System Analytics' : 'Your Analytics'}
+              </CardTitle>
+              <CardDescription>
+                {userRole === 'admin' 
+                  ? 'Monitor overall academic progress and performance across all students'
+                  : 'Track your academic progress and performance'
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {analytics.length === 0 ? (
