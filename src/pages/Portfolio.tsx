@@ -106,16 +106,27 @@ const Portfolio = () => {
 
       if (certificateError) throw certificateError;
 
-      // Fetch user profile from auth metadata if possible
-      // For now, we'll create a basic profile structure
-      const mockProfile = {
-        email: "student@university.edu", // In real implementation, this would come from user data
-        created_at: new Date().toISOString()
-      };
+      // Fetch user profile from Supabase auth
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      let userProfile = null;
+      if (user && user.id === userId) {
+        // User is viewing their own portfolio, show full details
+        userProfile = {
+          email: user.email || "student@university.edu",
+          created_at: user.created_at || new Date().toISOString()
+        };
+      } else {
+        // Public view - show limited info
+        userProfile = {
+          email: "Student Portfolio", // Don't show actual email for privacy
+          created_at: new Date().toISOString()
+        };
+      }
 
       setPortfolios(portfolioData || []);
       setCertificates(certificateData || []);
-      setUserProfile(mockProfile);
+      setUserProfile(userProfile);
     } catch (error) {
       console.error('Error fetching portfolio data:', error);
       toast.error("Failed to load portfolio data");
