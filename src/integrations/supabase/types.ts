@@ -41,6 +41,57 @@ export type Database = {
         }
         Relationships: []
       }
+      certificates: {
+        Row: {
+          category: string | null
+          certificate_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_verified: boolean
+          issue_date: string | null
+          issuer: string
+          title: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          certificate_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_verified?: boolean
+          issue_date?: string | null
+          issuer: string
+          title: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          certificate_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_verified?: boolean
+          issue_date?: string | null
+          issuer?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
       portfolios: {
         Row: {
           created_at: string

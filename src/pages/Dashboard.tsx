@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { AddProjectDialog } from "@/components/AddProjectDialog";
 import { StudyTimer } from "@/components/StudyTimer";
+import { SkillsShowcase } from "@/components/SkillsShowcase";
 
 interface Portfolio {
   id: string;
@@ -204,6 +205,11 @@ const Dashboard = () => {
           {/* Study Timer for Students */}
           {userRole !== 'admin' && (
             <StudyTimer onHoursUpdated={fetchUserData} />
+          )}
+
+          {/* Skills Showcase for Students */}
+          {userRole !== 'admin' && (
+            <SkillsShowcase onCertificateAdded={fetchUserData} />
           )}
 
           {/* Quick Stats Cards */}
