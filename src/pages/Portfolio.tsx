@@ -110,16 +110,24 @@ const Portfolio = () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       let userProfile = null;
-      if (user && user.id === userId) {
-        // User is viewing their own portfolio, show full details
-        userProfile = {
-          email: user.email || "student@university.edu",
-          created_at: user.created_at || new Date().toISOString()
-        };
+      if (user) {
+        if (user.id === userId) {
+          // User is viewing their own portfolio, show full details
+          userProfile = {
+            email: user.email || "student@university.edu",
+            created_at: user.created_at || new Date().toISOString()
+          };
+        } else {
+          // Public view - show limited info (but still show as a student portfolio)
+          userProfile = {
+            email: "Student Portfolio", // Don't show actual email for privacy
+            created_at: new Date().toISOString()
+          };
+        }
       } else {
-        // Public view - show limited info
+        // Not authenticated - create generic profile
         userProfile = {
-          email: "Student Portfolio", // Don't show actual email for privacy
+          email: "Student Portfolio",
           created_at: new Date().toISOString()
         };
       }
