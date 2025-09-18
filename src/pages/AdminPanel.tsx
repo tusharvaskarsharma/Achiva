@@ -2,11 +2,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, GraduationCap, BarChart3, Settings, FolderOpen, TrendingUp, Calendar, Award, LogOut, CheckCircle, Clock, Eye } from "lucide-react";
+import { Users, GraduationCap, BarChart3, Settings, FolderOpen, TrendingUp, Calendar, Award, LogOut, CheckCircle, Clock, Eye, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { ProjectReviewDialog } from "@/components/ProjectReviewDialog";
+import { CertificateReviewDialog } from "@/components/CertificateReviewDialog";
 
 const AdminPanel = () => {
   const { user, signOut } = useAuth();
@@ -18,10 +19,13 @@ const AdminPanel = () => {
     totalProjects: 0,
     totalAnalytics: 0,
     recentProjects: 0,
-    activeProjects: 0
+    activeProjects: 0,
+    totalCertificates: 0,
+    pendingCertificates: 0
   });
   const [recentProjects, setRecentProjects] = useState<any[]>([]);
   const [allProjects, setAllProjects] = useState<any[]>([]);
+  const [allCertificates, setAllCertificates] = useState<any[]>([]);
 
   useEffect(() => {
     fetchAdminData();
@@ -66,6 +70,16 @@ const AdminPanel = () => {
         .from('analytics')
         .select('*', { count: 'exact', head: true });
 
+      // Fetch certificate counts
+      const { count: certificatesCount, error: certificatesError } = await supabase
+        .from('certificates')
+        .select('*', { count: 'exact', head: true });
+
+      const { count: pendingCertificatesCount, error: pendingCertificatesError } = await supabase
+        .from('certificates')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_verified', false);
+
       // Check for errors
       if (studentError) console.error('Student count error:', studentError);
       if (adminError) console.error('Admin count error:', adminError);
@@ -73,6 +87,8 @@ const AdminPanel = () => {
       if (activeProjectsError) console.error('Active projects error:', activeProjectsError);
       if (recentError) console.error('Recent projects error:', recentError);
       if (analyticsError) console.error('Analytics count error:', analyticsError);
+      if (certificatesError) console.error('Certificates count error:', certificatesError);
+      if (pendingCertificatesError) console.error('Pending certificates error:', pendingCertificatesError);
 
       // Fetch recent projects details for display
       const { data: recentProjectsData } = await supabase
@@ -87,17 +103,26 @@ const AdminPanel = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
+      // Fetch all certificates for review
+      const { data: allCertificatesData } = await supabase
+        .from('certificates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
       setStats({
         totalStudents: studentCount || 0,
         totalAdmins: adminCount || 0,
         totalProjects: portfolioCount || 0,
         totalAnalytics: analyticsCount || 0,
         recentProjects: recentProjectsCount || 0,
-        activeProjects: activeProjectsCount || 0
+        activeProjects: activeProjectsCount || 0,
+        totalCertificates: certificatesCount || 0,
+        pendingCertificates: pendingCertificatesCount || 0
       });
 
       setRecentProjects(recentProjectsData || []);
       setAllProjects(allProjectsData || []);
+      setAllCertificates(allCertificatesData || []);
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
@@ -385,36 +410,123 @@ const AdminPanel = () => {
             </CardContent>
           </Card>
 
+          {/* Certificate Review Section */}
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5" />
+                    Certificate Review & Verification
+                  </CardTitle>
+                  <CardDescription>Review and verify student certificate submissions</CardDescription>
+                </div>
+                <Badge variant="secondary">
+                  {allCertificates.filter(c => !c.is_verified).length} Pending Review
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-2 text-muted-foreground">Loading certificates...</p>
+                </div>
+              ) : allCertificates.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No certificates found</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {allCertificates.slice(0, 10).map((certificate) => (
+                    <div key={certificate.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="font-medium">{certificate.title}</h4>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {certificate.category.replace('_', ' ')}
+                            </Badge>
+                            {certificate.is_verified ? (
+                              <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Pending Review
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-1 mb-1">Issued by: {certificate.issuer}</p>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <span>Submitted: {new Date(certificate.created_at).toLocaleDateString()}</span>
+                          {certificate.verified_at && (
+                            <span>Verified: {new Date(certificate.verified_at).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {certificate.certificate_url && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={certificate.certificate_url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                        <CertificateReviewDialog certificate={certificate} onReviewComplete={fetchAdminData}>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4 mr-1" />
+                            Review
+                          </Button>
+                        </CertificateReviewDialog>
+                      </div>
+                    </div>
+                  ))}
+                  {allCertificates.length > 10 && (
+                    <div className="text-center pt-4">
+                      <p className="text-sm text-muted-foreground">
+                        Showing 10 of {allCertificates.length} certificates
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Additional Admin Features */}
           <div className="grid md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Award className="h-5 w-5" />
-                  Portfolio Statistics
+                  Certificate Statistics
                 </CardTitle>
                 <CardDescription>
-                  Overview of student project submissions
+                  Overview of student certificate submissions
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Verified Projects:</span>
+                    <span className="text-sm text-muted-foreground">Verified Certificates:</span>
                     <span className="font-medium">
-                      {allProjects.filter(p => p.is_verified).length} / {allProjects.length}
+                      {allCertificates.filter(c => c.is_verified).length} / {allCertificates.length}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Completed Projects:</span>
-                    <span className="font-medium">
-                      {allProjects.filter(p => p.status === 'completed').length}
+                    <span className="text-sm text-muted-foreground">Pending Review:</span>
+                    <span className="font-medium text-orange-600">
+                      {allCertificates.filter(c => !c.is_verified).length}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">In Progress:</span>
+                    <span className="text-sm text-muted-foreground">Total Categories:</span>
                     <span className="font-medium">
-                      {allProjects.filter(p => p.status === 'in_progress').length}
+                      {new Set(allCertificates.map(c => c.category)).size}
                     </span>
                   </div>
                 </div>
