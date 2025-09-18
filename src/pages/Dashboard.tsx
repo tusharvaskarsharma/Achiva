@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { AddProjectDialog } from "@/components/AddProjectDialog";
 import { StudyTimer } from "@/components/StudyTimer";
 import { SkillsShowcase } from "@/components/SkillsShowcase";
+import { PortfolioGenerator } from "@/components/PortfolioGenerator";
 
 interface Portfolio {
   id: string;
@@ -210,6 +211,11 @@ const Dashboard = () => {
           {/* Skills Showcase for Students */}
           {userRole !== 'admin' && (
             <SkillsShowcase />
+          )}
+
+          {/* Portfolio Generator for Students */}
+          {userRole !== 'admin' && (
+            <PortfolioGenerator />
           )}
 
           {/* Quick Stats Cards */}
