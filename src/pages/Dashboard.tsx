@@ -209,7 +209,7 @@ const Dashboard = () => {
 
           {/* Skills Showcase for Students */}
           {userRole !== 'admin' && (
-            <SkillsShowcase onCertificateAdded={fetchUserData} />
+            <SkillsShowcase />
           )}
 
           {/* Quick Stats Cards */}
