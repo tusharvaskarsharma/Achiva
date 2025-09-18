@@ -111,19 +111,11 @@ const Portfolio = () => {
       
       let userProfile = null;
       if (user) {
-        if (user.id === userId) {
-          // User is viewing their own portfolio, show full details
-          userProfile = {
-            email: user.email || "student@university.edu",
-            created_at: user.created_at || new Date().toISOString()
-          };
-        } else {
-          // Public view - show limited info (but still show as a student portfolio)
-          userProfile = {
-            email: "Student Portfolio", // Don't show actual email for privacy
-            created_at: new Date().toISOString()
-          };
-        }
+        // Always show the actual user data when authenticated
+        userProfile = {
+          email: user.email || "student@university.edu",
+          created_at: user.created_at || new Date().toISOString()
+        };
       } else {
         // Not authenticated - create generic profile
         userProfile = {
