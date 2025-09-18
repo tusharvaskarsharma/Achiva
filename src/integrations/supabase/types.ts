@@ -143,6 +143,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          degree: string | null
+          full_name: string | null
+          github_url: string | null
+          graduation_year: number | null
+          id: string
+          linkedin_url: string | null
+          phone: string | null
+          skills: string[] | null
+          university: string | null
+          updated_at: string
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          degree?: string | null
+          full_name?: string | null
+          github_url?: string | null
+          graduation_year?: number | null
+          id?: string
+          linkedin_url?: string | null
+          phone?: string | null
+          skills?: string[] | null
+          university?: string | null
+          updated_at?: string
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          degree?: string | null
+          full_name?: string | null
+          github_url?: string | null
+          graduation_year?: number | null
+          id?: string
+          linkedin_url?: string | null
+          phone?: string | null
+          skills?: string[] | null
+          university?: string | null
+          updated_at?: string
+          user_id?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -172,6 +226,10 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_user_portfolio_data: {
+        Args: { target_user_id: string }
+        Returns: Json
       }
       has_role: {
         Args: {

@@ -9,10 +9,10 @@ import { toast } from "sonner";
 
 interface PortfolioData {
   id: string;
-  user_id: string;
   title: string;
   description: string;
   project_url: string;
+  image_url: string | null;
   technologies: string[];
   status: string;
   is_verified: boolean;
@@ -26,14 +26,32 @@ interface CertificateData {
   issuer: string;
   issue_date: string;
   category: string;
+  description: string;
   is_verified: boolean;
   verified_at: string | null;
-  description: string;
+  created_at: string;
 }
 
 interface UserProfile {
-  email: string;
+  user_id: string;
+  full_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  university: string | null;
+  degree: string | null;
+  graduation_year: number | null;
+  skills: string[] | null;
+  linkedin_url: string | null;
+  github_url: string | null;
+  website_url: string | null;
   created_at: string;
+}
+
+interface PortfolioStats {
+  total_projects: number;
+  completed_projects: number;
+  total_certificates: number;
+  total_study_hours: number;
 }
 
 const Portfolio = () => {
@@ -41,6 +59,7 @@ const Portfolio = () => {
   const [portfolios, setPortfolios] = useState<PortfolioData[]>([]);
   const [certificates, setCertificates] = useState<CertificateData[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [stats, setStats] = useState<PortfolioStats | null>(null);
   const [loading, setLoading] = useState(true);
   const portfolioRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +70,7 @@ const Portfolio = () => {
         printWindow.document.write(`
           <html>
             <head>
-              <title>Portfolio - ${userProfile?.email?.split('@')[0] || 'Student'}</title>
+              <title>Portfolio - ${userProfile?.full_name || 'Student'}</title>
               <style>
                 body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; }
                 .container { max-width: 800px; margin: 0 auto; }
@@ -86,47 +105,61 @@ const Portfolio = () => {
 
   const fetchPortfolioData = async () => {
     try {
-      // Fetch user's portfolios
-      const { data: portfolioData, error: portfolioError } = await supabase
-        .from('portfolios')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_verified', true) // Only show verified portfolios
-        .order('created_at', { ascending: false });
+      if (!userId) return;
 
-      if (portfolioError) throw portfolioError;
+      // Use the new database function to get all portfolio data
+      const { data, error } = await supabase.rpc('get_user_portfolio_data', { 
+        target_user_id: userId 
+      });
 
-      // Fetch user's certificates
-      const { data: certificateData, error: certificateError } = await supabase
-        .from('certificates')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_verified', true) // Only show verified certificates
-        .order('issue_date', { ascending: false });
+      if (error) throw error;
 
-      if (certificateError) throw certificateError;
-
-      // Fetch user profile from Supabase auth
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      let userProfile = null;
-      if (user) {
-        // Always show the actual user data when authenticated
-        userProfile = {
-          email: user.email || "student@university.edu",
-          created_at: user.created_at || new Date().toISOString()
-        };
-      } else {
-        // Not authenticated - create generic profile
-        userProfile = {
-          email: "Student Portfolio",
-          created_at: new Date().toISOString()
-        };
+      if (data) {
+        const portfolioData = data as any;
+        setPortfolios(portfolioData.portfolios || []);
+        setCertificates(portfolioData.certificates || []);
+        setStats(portfolioData.stats || { total_projects: 0, completed_projects: 0, total_certificates: 0, total_study_hours: 0 });
+        
+        // Handle user profile - combine database profile with auth data if needed
+        let profile = portfolioData.user_profile;
+        if (!profile || !profile.user_id) {
+          // If no profile exists, get auth data and create basic profile
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            profile = {
+              user_id: user.id,
+              full_name: user.email?.split('@')[0] || 'Student',
+              bio: null,
+              avatar_url: null,
+              university: null,
+              degree: null,
+              graduation_year: null,
+              skills: null,
+              linkedin_url: null,
+              github_url: null,
+              website_url: null,
+              created_at: user.created_at || new Date().toISOString()
+            };
+          } else {
+            // Public view with no profile
+            profile = {
+              user_id: userId,
+              full_name: 'Student',
+              bio: null,
+              avatar_url: null,
+              university: null,
+              degree: null,
+              graduation_year: null,
+              skills: null,
+              linkedin_url: null,
+              github_url: null,
+              website_url: null,
+              created_at: new Date().toISOString()
+            };
+          }
+        }
+        setUserProfile(profile);
       }
-
-      setPortfolios(portfolioData || []);
-      setCertificates(certificateData || []);
-      setUserProfile(userProfile);
     } catch (error) {
       console.error('Error fetching portfolio data:', error);
       toast.error("Failed to load portfolio data");
@@ -208,13 +241,13 @@ const Portfolio = () => {
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold">
-                    {userProfile?.email?.split('@')[0]?.toUpperCase() || 'STUDENT'}
+                    {userProfile?.full_name?.toUpperCase() || userProfile?.user_id?.split('-')[0]?.toUpperCase() || 'STUDENT'}
                   </h1>
                   <p className="text-white/80 text-lg">Academic Portfolio</p>
                   <div className="flex items-center justify-center gap-4 mt-4 text-white/70">
                     <div className="flex items-center gap-1">
                       <Mail className="h-4 w-4" />
-                      <span className="text-sm">{userProfile?.email}</span>
+                      <span className="text-sm">{userProfile?.full_name || 'Student Portfolio'}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
@@ -232,21 +265,19 @@ const Portfolio = () => {
           <div className="grid md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="pt-4 text-center">
-                <div className="text-2xl font-bold text-primary">{portfolios.length}</div>
+                <div className="text-2xl font-bold text-primary">{stats?.total_projects || 0}</div>
                 <p className="text-muted-foreground text-sm">Verified Projects</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4 text-center">
-                <div className="text-2xl font-bold text-primary">{certificates.length}</div>
+                <div className="text-2xl font-bold text-primary">{stats?.total_certificates || 0}</div>
                 <p className="text-muted-foreground text-sm">Certificates Earned</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4 text-center">
-                <div className="text-2xl font-bold text-primary">
-                  {portfolios.filter(p => p.status === 'completed').length}
-                </div>
+                <div className="text-2xl font-bold text-primary">{stats?.completed_projects || 0}</div>
                 <p className="text-muted-foreground text-sm">Completed Projects</p>
               </CardContent>
             </Card>
