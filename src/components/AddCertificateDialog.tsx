@@ -42,6 +42,8 @@ export const AddCertificateDialog = ({ onCertificateAdded }: AddCertificateDialo
     { value: "language", label: "Language Proficiency" },
     { value: "leadership", label: "Leadership" },
     { value: "volunteer", label: "Volunteer Work" },
+    { value: "online_courses", label: "Online Courses" },
+    { value: "internship", label: "Internship Certificates" },
     { value: "other", label: "Other" }
   ];
 

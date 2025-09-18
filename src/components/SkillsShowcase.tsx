@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Award, ExternalLink, Calendar, Building, CheckCircle, Clock, Trophy, Medal, Star, Target, Zap, Globe } from "lucide-react";
+import { Award, ExternalLink, Calendar, Building, CheckCircle, Clock, Trophy, Medal, Star, Target, Zap, Globe, GraduationCap, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AddCertificateDialog } from "./AddCertificateDialog";
@@ -63,6 +63,10 @@ export const SkillsShowcase = () => {
         return <Star className="h-5 w-5" />;
       case 'volunteer':
         return <Target className="h-5 w-5" />;
+      case 'online_courses':
+        return <GraduationCap className="h-5 w-5" />;
+      case 'internship':
+        return <Briefcase className="h-5 w-5" />;
       default:
         return <Award className="h-5 w-5" />;
     }
@@ -82,6 +86,10 @@ export const SkillsShowcase = () => {
         return 'bg-yellow-500/10 text-yellow-700 border-yellow-200';
       case 'volunteer':
         return 'bg-pink-500/10 text-pink-700 border-pink-200';
+      case 'online_courses':
+        return 'bg-indigo-500/10 text-indigo-700 border-indigo-200';
+      case 'internship':
+        return 'bg-teal-500/10 text-teal-700 border-teal-200';
       default:
         return 'bg-gray-500/10 text-gray-700 border-gray-200';
     }
