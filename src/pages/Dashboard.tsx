@@ -268,7 +268,7 @@ const Dashboard = () => {
           </div>
 
           {/* Portfolio Section */}
-          <Card className="transition-all duration-200 hover:shadow-lg">
+          <Card id="portfolio" className="transition-all duration-200 hover:shadow-lg">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -357,7 +357,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Analytics Section */}
-          <Card className="transition-all duration-200 hover:shadow-lg">
+          <Card id="analytics" className="transition-all duration-200 hover:shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl">
                 {userRole === 'admin' ? 'System Analytics' : 'Your Analytics'}
